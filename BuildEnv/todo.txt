@@ -1,0 +1,14 @@
+0) tests for web app
+    - switch to ansible playbook for test runs
+1) use env variables from k8s for service discvoery
+2) script infrastructure
+    -build server
+    -cluster
+    -monitoring
+3) tick stack, container infrastructure
+    -config as code
+    -statsd 
+4) NGinX for web app?
+
+
+https://github.com/elgris/microservice-app-example

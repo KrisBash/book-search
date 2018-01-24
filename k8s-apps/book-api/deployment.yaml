@@ -1,0 +1,31 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: book-search
+  name: book-api{{fullVersion}}
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: book-search
+        version: {{fullVersion}}
+        service: book-api
+    spec:
+      containers:
+      - env:
+        - name: BOOK_API_PORT
+          value: "8222"
+        - name: STATSD_SERVER
+          value: "192.168.1.120"
+        - name: STATSD_PORT
+          value: "8125"
+        image: "{{registryUrl}}/{{fullVersion}}/book-api"
+        name: book-api
+        ports:
+        - containerPort: 8222
+        imagePullPolicy: Always
+      imagePullSecrets:
+        - name: regsecret
+      restartPolicy: Always

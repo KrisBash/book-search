@@ -1,0 +1,44 @@
+- hosts: all
+  connection: local
+  vars:
+
+  tasks:
+    - name: export fullVersion
+      shell: "/bin/bash ../BuildEnv/getVersion.sh"
+      register: version_script
+    
+    - name: Install test packages
+      become: yes
+      apt: name={{item}} state=present
+      with_items:
+        - ruby-dev
+        - ruby-rest-client
+
+    - name: Make test files executable
+      file:
+        path: "{{item}}"
+        mode: 0755
+      with_items:
+        - "./test_book-api.rb"
+
+    - name: Run book-api container
+      become: yes
+      docker_container:
+        name: bookapi-{{ version_script.stdout }}
+        image: "book-api:latest"
+        command: "/go/src/app/src/book-api"
+        published_ports: "8222:8222"
+        state: started
+        detach: yes
+        
+    - name: Test book-api
+      become: yes
+      shell: /bin/bash -c "./test_book-api.rb"   
+      register: test_book_api
+
+    - name: stop book-api container
+      become: yes
+      docker_container:
+        name: bookapi-{{ version_script.stdout }}
+        state: stopped
+        

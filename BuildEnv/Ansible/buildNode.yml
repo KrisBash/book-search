@@ -1,0 +1,89 @@
+- hosts: all
+  connection: local
+  vars:
+    packer_version: 0.10.1
+    packer_download_url: "https://releases.hashicorp.com/packer/{{ packer_version }}/packer_{{ packer_version }}_linux_amd64.zip"
+    packer_archive_path: "/var/cache/packer/packer_{{ packer_version }}"
+    packer_binary_path: "/usr/local/bin"
+    packer_plugins: {}
+    packer_force_install: False
+
+  tasks:
+
+  - name: check if packer is installed
+    stat: path=/usr/local/bin/packer
+    register: packer_bin
+
+  - name: Install node packages
+    become: yes
+    apt: name={{item}} state=present
+    with_items:
+      - nodejs
+      - nodejs-dev
+      - npm
+      - nodejs-legacy
+
+  - name: trust MSFT package key
+    apt_key:
+      url: "https://packages.microsoft.com/keys/microsoft.asc"
+      state: present
+    become: yes
+
+  - name: Add azure apt repo
+    apt_repository:
+      repo: deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ wheezy main
+      state: present
+    become: yes
+    
+  - name: Install az packages
+    become: yes
+    apt: name={{item}} state=present
+    with_items:
+      - apt-transport-https
+      - azure-cli
+
+  - name: download Packer
+    become: yes
+    get_url:
+      url: "{{ packer_download_url }}"
+      dest: "{{ packer_archive_path }}"
+      force: "{{ packer_force_install }}"
+    register: download
+    when: not packer_bin.stat.exists
+
+  - name: Configured packer file permissions
+    file:
+      state: directory
+      path: "{{ item }}"
+      mode: 0755
+      owner: root
+      group: root
+    with_items:
+      - "{{ packer_archive_path }}"
+      - "{{ packer_binary_path }}"
+    when: not packer_bin.stat.exists
+
+  - name: extract Packer archive
+    unarchive:
+      src: "{{ packer_archive_path }}/{{ packer_download_url | basename }}"
+      dest: "{{ packer_binary_path }}"
+      copy: False
+    when: download.changed
+
+  - name: set packer binary acls
+    file:
+      path: "{{ item }}"
+      state: file
+      mode: 0755
+    with_fileglob: "{{ packer_binary_path }}/packer*"
+
+  - name: Install ruby packages
+    become: yes
+    apt: name={{item}} state=present
+    with_items:
+      - ruby
+
+  - name: install gems
+    become: yes
+    shell: gem install graphql-client
+    

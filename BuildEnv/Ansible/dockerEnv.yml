@@ -1,0 +1,86 @@
+- hosts: all
+  connection: local
+  vars:
+    docker_compose_version: '1.18.0'
+    helm_binary: "/usr/local/bin/helm"
+
+  tasks:
+  - name: check if Docker compose is installed
+    stat: path=/usr/bin/docker-compose
+    register: docker_compose
+
+  - name: check if kubernetes is installed
+    stat: path=/etc/kubernetes/admin.conf
+    register: admin_conf
+
+  - name: check if helm is installed
+    stat: path={{ helm_binary }}
+    register: helm_bin
+
+  - name: trust Google package key
+    apt_key:
+      url: "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
+      state: present
+    become: yes
+    when: not admin_conf.stat.exists
+    
+  - name: Install docker-compose
+    become: yes
+    apt: name={{item}} state=present
+    with_items:
+        - docker-registry
+        - docker.io
+
+  - name: Install Docker Compose
+    become: yes
+    get_url:
+      url: 'https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-Linux-x86_64'
+      dest: '/usr/local/bin/docker-compose'
+      force: True
+      owner: 'root'
+      group: 'root'
+      mode: '0755'
+    when: not docker_compose.stat.exists
+
+  - name: add Kubernetes apt repo
+    apt_repository:
+      repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+      state: present
+    become: yes
+    when: not admin_conf.stat.exists        
+
+  - name: Install k8s packages
+    become: yes
+    apt: name={{item}} state=present
+    with_items:
+      - kubelet
+      - kubeadm
+      - kubectl
+    when: not admin_conf.stat.exists    
+
+  - name: download Helm
+    get_url:
+      url: "https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get"
+      dest: "/var/cache/helm/get_helm.sh"
+    register: download
+    when: not helm_bin.stat.exists
+
+  - name: Set helm script acls
+    file:
+      path: "{{ item }}"
+      state: file
+      mode: 0755
+    with_fileglob: "/var/cache/helm/*"    
+    when: not helm_bin.stat.exists
+
+  - name: install Helm
+    shell: /var/cache/helm/get_helm.sh
+    when: not helm_bin.stat.exists
+
+  - name: clean docker containers
+    shell: sudo docker ps --no-trunc -aqf "status=exited" | xargs sudo docker rm
+    ignore_errors: yes
+
+  - name: clean docker images
+    shell: sudo docker images --no-trunc -aqf "dangling=true" | xargs sudo docker rmi
+    ignore_errors: yes

@@ -1,0 +1,25 @@
+- hosts: all
+  connection: local
+  vars:
+    client_id: "{{ lookup('env','client_id') }}"
+    client_secret: "{{ lookup('env','client_secret') }}"
+    tenant_id: "{{ lookup('env','tenant_id') }}"
+    resource_group: "{{ lookup('env','aks_resource_group') }}"
+    cluster_name: "{{ lookup('env','aks_cluster_name') }}"
+
+  tasks:
+
+    - name: check if Helm & Tiller are installed
+      shell: helm version |grep Server|grep v2 |wc -l
+      register: tiller_version
+
+    - name: AZ Login
+      shell: az login --service-principal -u {{client_id}} -p {{client_secret}} --tenant {{tenant_id}}
+      no_log: true
+
+    - name: AZ GetCred
+      shell: az aks get-credentials --resource-group {{resource_group}} --name {{cluster_name}}
+
+    - name: Init Helm and Tiller
+      shell: helm init
+      when: tiller_version.stdout < 1

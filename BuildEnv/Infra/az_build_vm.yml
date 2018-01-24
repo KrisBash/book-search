@@ -1,0 +1,49 @@
+- hosts: all
+  connection: local
+  vars:
+    client_id: "{{ lookup('env','client_id') }}"
+    client_secret: "{{ lookup('env','client_secret') }}"
+    tenant_id: "{{ lookup('env','tenant_id') }}"
+    rg_name: "{{ lookup('env','vm_rg_name') }}"
+    admin_username: "{{ lookup('env','admin_username') }}"
+    admin_ssh_key: "{{ lookup('env','admin_ssh_key') }}"
+
+  tasks:
+  - name: AZ Login
+    shell: az login --service-principal -u {{client_id}} -p {{client_secret}} --tenant {{tenant_id}}
+    no_log: true
+
+  - name: Instantiate resource group
+    azure_rm_resourcegroup:
+      name: {{rg_name}}
+      location: {{build_vm_location}}
+      state: present
+    
+  - name: Create VM with defaults
+    azure_rm_virtualmachine:
+      resource_group: {{rg_name}}
+      name: {{build_vm_name}}
+      location: {{build_vm_location}}
+      admin_username: {{admin_username}}
+      vm_size: Standard_A1
+      network_interfaces: "{{build_vm_name}}_nic1"
+      ssh_public_keys:
+        - path: /home/{[admin_username}}/.ssh/authorized_keys
+          key_data: "{{admin_ssh_key}}"
+      image:
+        offer: UbuntuServer
+        publisher: Canonical
+        sku: '16.04-LTS'
+        version: latest
+
+  - name: Deploy gitlab-runner to new build VM
+    azure_rm_virtualmachine_extension:
+      name: gitlab-runner-install
+      location: {{build_vm_location}}
+      resource_group: {{rg_name}}
+      virtual_machine_name: {{build_vm_name}}
+      publisher: Microsoft.OSTCExtensions
+      virtual_machine_extension_type: CustomScriptForLinux
+      type_handler_version: 1.5
+      settings: '{"commandToExecute": "curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.deb.sh | bash && apt-get update && apt-get install gitlab-runner "}'
+      auto_upgrade_minor_version: true

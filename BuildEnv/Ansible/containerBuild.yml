@@ -1,0 +1,71 @@
+- hosts: all
+  connection: local
+  vars:
+    registryUrl: "{{ lookup('env','registryUrl') }}"
+    registryName: "{{ lookup('env','registryName') }}"
+    client_id: "{{ lookup('env','client_id') }}"
+    client_secret: "{{ lookup('env','client_secret') }}"
+    tenant_id: "{{ lookup('env','tenant_id') }}"
+
+  tasks:
+
+  - name: export fullVersion
+    shell: "/bin/bash ../getVersion.sh"
+    register: version_script
+ 
+  - name: get playbook path
+    shell: pwd
+    register: playbook_path_output
+
+  - name: Log into registry and force re-authorization
+    become: yes
+    docker_login:
+      registry: "{{registryUrl}}"
+      username: "{{client_id}}"
+      password: "{{client_secret}}"
+      reauthorize: yes
+
+  - name: Build nodejs build container
+    become: yes
+    command: docker build -t builder-{{ version_script.stdout }}:latest -f ../../book-website/Dockerfile.build ../../book-website/
+
+  - name: ensure staging directory
+    file:
+      path: "../../book-website/build/"
+      state: directory
+      mode: 0755      
+
+  - name: Run docker container
+    become: yes
+    docker_container:
+      name: node-builder
+      image: "builder-{{ version_script.stdout }}"
+      volumes:
+        - "{{ playbook_path_output.stdout }}/../../book-website/build/:/mnt/build" 
+      command: "cp -ra /src/. /mnt/build/"
+      cleanup: yes      
+
+  - name: Build images and push to repo
+    become: yes
+    docker_image:
+      path: "../../{{item}}/"
+      name: "{{registryUrl}}/{{ version_script.stdout }}/{{item}}"
+      tag: "latest"
+      push: yes
+    with_items:
+      - book-api
+      - book-website
+
+  - name: Delete build container(s)
+    become: yes
+    docker_image:
+      state: absent
+      name: builder-{{ version_script.stdout }}
+      tag: latest
+      force: yes
+
+  - name: Clean build path
+    become: yes
+    file:
+      state: absent
+      path: "../../book-website/build/"

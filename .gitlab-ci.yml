@@ -1,0 +1,81 @@
+variables:
+#  GIT_STRATEGY: clone
+
+stages:
+  - bootstrap
+  - setup
+  - build
+  - cleanup_builds
+  - test
+  - deploy
+  # sec scans
+  - activateProd
+  # monitoring
+  - cleanup
+ 
+prepare:
+  stage: bootstrap
+  script:
+    - /bin/bash ./BuildEnv/getVersion.sh 
+    - /bin/bash ./BuildEnv/initialize.sh
+  tags:
+    - linux
+
+buildEnvInit:
+  stage: setup  
+  script:
+    - /bin/bash -c "ansible-playbook -i \"localhost,\" -c local ./BuildEnv/Ansible/buildEnv.yml --verbose"
+  tags:
+    - linux
+
+buildContainers:
+  stage: build
+  script:
+    - /bin/bash -c "ansible-playbook -i \"localhost,\" -c local ./BuildEnv/Ansible/containerBuild.yml --verbose"   
+  tags:
+    - linux
+
+purgeBuilds:
+  stage: cleanup_builds
+  script:
+    - sudo /bin/bash -c "rm -rf ./book-website/build/"   
+  tags:
+    - linux    
+  when: on_failure
+
+testContainers:
+  stage: test
+  script:
+    - /bin/bash -c "ansible-playbook -i \"localhost,\" -c local ./test/test_runner.yml --verbose"   
+  tags:
+    - linux
+
+deployToK8s:
+  stage: deploy
+  script:
+    - /bin/bash ./BuildEnv/deploy2K8s.sh
+    - /bin/bash ./k8s-apps/deploymentTest.sh
+  tags:
+    - linux
+
+activateK8sServices:
+  stage: activateProd
+  script:
+    - /bin/bash ./BuildEnv/deployK8sServices.sh
+  tags:
+    - linux    
+
+purgeACRrepos:
+  stage: cleanup
+  script:
+    - /bin/bash ./BuildEnv/deleteACRRepos.sh
+  tags:
+    - linux
+
+purgeDeployments:
+  stage: cleanup
+  script:
+    - /bin/bash ./BuildEnv/deleteDeployments.sh
+  tags:
+    - linux   
+

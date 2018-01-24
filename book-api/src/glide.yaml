@@ -1,0 +1,11 @@
+package: .
+import:
+- package: github.com/graphql-go/graphql
+  version: v0.4.18
+  subpackages:
+  - '...'
+- package: gopkg.in/alexcesaro/statsd.v2
+  subpackages:
+  - '...'
+
+

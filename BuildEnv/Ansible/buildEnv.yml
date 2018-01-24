@@ -1,0 +1,10 @@
+- hosts: all
+  connection: local
+  vars:
+    fullVersion: "{{ lookup('env','fullVersion') }}"
+
+- include: buildNode.yml
+- include: azEnv.yml
+- include: goLang.yml
+- include: dockerEnv.yml
+

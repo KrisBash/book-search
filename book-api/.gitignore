@@ -1,0 +1,4 @@
+vendor
+book-api
+./src/github.com
+./src/golang.org
