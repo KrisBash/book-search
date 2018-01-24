@@ -3,7 +3,6 @@ variables:
 
 stages:
   - bootstrap
-  - setup
   - build
   - cleanup_builds
   - test
@@ -18,12 +17,6 @@ prepare:
   script:
     - /bin/bash ./BuildEnv/getVersion.sh 
     - /bin/bash ./BuildEnv/initialize.sh
-  tags:
-    - linux
-
-buildEnvInit:
-  stage: setup  
-  script:
     - /bin/bash -c "ansible-playbook -i \"localhost,\" -c local ./BuildEnv/Ansible/buildEnv.yml --verbose"
   tags:
     - linux
@@ -55,15 +48,9 @@ deployToK8s:
   script:
     - /bin/bash ./BuildEnv/deploy2K8s.sh
     - /bin/bash ./k8s-apps/deploymentTest.sh
-  tags:
-    - linux
-
-activateK8sServices:
-  stage: activateProd
-  script:
     - /bin/bash ./BuildEnv/deployK8sServices.sh
   tags:
-    - linux    
+    - linux
 
 purgeACRrepos:
   stage: cleanup
