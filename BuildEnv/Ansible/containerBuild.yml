@@ -42,7 +42,7 @@
       image: "builder-{{ version_script.stdout }}"
       volumes:
         - "{{ playbook_path_output.stdout }}/../../book-website/build/:/mnt/build" 
-      command: "cp -ra /src/. /mnt/build/"
+      command: "cp -ra /src/. /mnt/build/ ; chmod -R 0755 /mnt/build/"
       cleanup: yes      
 
   - name: Build images and push to repo
