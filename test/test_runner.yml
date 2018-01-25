@@ -42,3 +42,23 @@
         name: bookapi-{{ version_script.stdout }}
         state: stopped
         
+    - name: Run book-website container
+      become: yes
+      docker_container:
+        name: bookwebsite-{{ version_script.stdout }}
+        image: "book-website:latest"
+        command: "/go/src/app/src/book-api"
+        published_ports: "80:80"
+        state: started
+        detach: yes
+
+    - name: Test book-website
+      become: yes
+      shell: /bin/bash -c "./test_book-website.rb"   
+      register: test_book_website
+
+    - name: stop book-website container
+      become: yes
+      docker_container:
+        name: bookwebsite-{{ version_script.stdout }}
+        state: stopped                
