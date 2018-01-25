@@ -6,7 +6,7 @@ metadata:
   name: book-api
 spec:
   ports:
-  - port: 822
+  - port: 8222
   selector:
     service: book-api
     version: {{fullVersion}}
