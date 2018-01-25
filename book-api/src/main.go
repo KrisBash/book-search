@@ -13,8 +13,15 @@ import (
 //	consulapi "github.com/hashicorp/consul/api"
 )
 
+func get_cacheaddr()(address string){
+	var cachedb_server string =  os.Getenv("CACHE_DB_SERVICE_HOST")
+	var cachedb_port string =  os.Getenv("CACHE_DB_SERVICE_PORT")
+	cachedb_address := cachedb_server + ":" + cachedb_port
+	return cachedb_address;
+}
+
 var redis_cl  = redis.NewClient(&redis.Options{
-	Addr:     cachedb_address,
+	Addr:     get_cacheaddr(),
 	Password: "", // no password set
 	DB:       0,  // use default DB
 })
@@ -34,27 +41,27 @@ type book_sparse struct {
 
 var book_type = graphql.NewObject(
 	graphql.ObjectConfig{
-			Name: "Book",
-			Fields: graphql.Fields{
-					"isbn": &graphql.Field{
-							Type: graphql.String,
-					},
-					"title": &graphql.Field{
-							Type: graphql.String,
-					},
-					"authors": &graphql.Field{
-							Type: graphql.String,
-					},
-					"description": &graphql.Field{
-							Type: graphql.String,
-					},
-					"page_count": &graphql.Field{Type: graphql.Int,},
-					"published_date": &graphql.Field{Type: graphql.String,},
-					"publisher": &graphql.Field{Type: graphql.String,},
-					"print_type": &graphql.Field{Type: graphql.String,},
-					"average_rating": &graphql.Field{Type: graphql.String,},
-					"image_links": &graphql.Field{Type: graphql.String,},
+		Name: "Book",
+		Fields: graphql.Fields{
+			"isbn": &graphql.Field{
+					Type: graphql.String,
 			},
+			"title": &graphql.Field{
+					Type: graphql.String,
+			},
+			"authors": &graphql.Field{
+					Type: graphql.String,
+			},
+			"description": &graphql.Field{
+					Type: graphql.String,
+			},
+			"page_count": &graphql.Field{Type: graphql.Int,},
+			"published_date": &graphql.Field{Type: graphql.String,},
+			"publisher": &graphql.Field{Type: graphql.String,},
+			"print_type": &graphql.Field{Type: graphql.String,},
+			"average_rating": &graphql.Field{Type: graphql.String,},
+			"image_links": &graphql.Field{Type: graphql.String,},
+		},
 	},
 )
 
@@ -70,111 +77,111 @@ func cache_set(key string, value string){
 
 var queryType = graphql.NewObject(
 	graphql.ObjectConfig{
-			Name: "Query",
-			Fields: graphql.Fields{
-					"book": &graphql.Field{
-							Type: book_type,
-							Args: graphql.FieldConfigArgument{
-									"isbn": &graphql.ArgumentConfig{
-											Type: graphql.String,
-									},
-							},
-
-							Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-									search_isbn := p.Args["isbn"].(string)
-									statsd_incr("book_requests")
-									log.Info("Searching for a book with isbn: ", search_isbn)
-
-									if search_isbn == "test"{
-											log.Info("isbn is set to test")
-											volume :=  map[string]interface{}{
-											"isbn":       fmt.Sprintf("test"),
-											"authors":     fmt.Sprintf("test"),
-											"title":          fmt.Sprintf("test"),
-											"description":    fmt.Sprintf("test"),
-											"published_date":        fmt.Sprintf("test"),
-											"publisher":      fmt.Sprintf("test"),
-											"print_type":     fmt.Sprintf("test"),
-											"average_rating":       fmt.Sprintf("%v\n",1),
-											"image_links":          fmt.Sprintf("test"),
-											"page_count":  fmt.Sprintf("%v\n",1),
-											}
-											return volume, nil
-								}
-
-								//query cache first
-								val, err := redis_cl.Get(search_isbn).Result()
-								if err != nil {
-									statsd_incr("cache_miss")
-									log.Info("No result in cache for ", search_isbn)
-								}else{
-									statsd_incr("cache_hit")
-									log.Info("Found a cache record for: ",search_isbn)
-									var result map[string]interface{}
-									json.Unmarshal([]byte(val), &result)
-																		
-									volume :=  map[string]interface{}{
-									"isbn":       result["isbn"],
-									"authors":     result["authors"],
-									"title":          result["title"],
-									"description":    result["description"],
-									"published_date":        result["published_date"],
-									"publisher":      result["publisher"],
-									"print_type":     result["print_type"],
-									"average_rating":       result["average_rating"],
-									"image_links":          result["image_links"],
-									"page_count":  result["page_count"],
-									}
-									return volume, nil										
-										
-								}
-								
-
-								var book_record book_volume
-								start := time.Now()
-								book_record = get_book_by_isbn(search_isbn)
-
-								//measure and emit lookup time
-								elapsed := time.Since(start).Seconds()
-								statsd_gauge("book_search_time_s",elapsed)
-								
-								
-								items := book_record.Items[0]
-								volume_info := items.VolumeInfo
-								image_links := volume_info.ImageLinks
-
-								log.Info("Book found:  ", book_record.TotalItems)
-								if book_record.TotalItems < 1 {
-										log.Warn("No records found for isbn")
-										return nil, nil
-								} else {
-									log.Info("Book found:  ", book_record.TotalItems)
-
-									volume :=  map[string]interface{}{
-									"isbn":       fmt.Sprintf("%v",search_isbn),
-									"authors":     fmt.Sprintf(strings.Join(volume_info.Authors, ", ")),
-									"title":          fmt.Sprintf(volume_info.Title),
-									"description":    fmt.Sprintf(volume_info.Description),
-									"published_date":         fmt.Sprintf(volume_info.PublishedDate),
-									"publisher":      fmt.Sprintf(volume_info.Publisher),
-									"print_type":     fmt.Sprintf(volume_info.PrintType),
-									"average_rating":       fmt.Sprintf("%v",volume_info.AverageRating),
-									"image_links":          fmt.Sprintf(image_links.SmallThumbnail),
-									"page_count":  fmt.Sprintf("%v",volume_info.PageCount),
-								}
-								
-								//marshal book info to JSON for cache
-								book_json,err := json.Marshal(volume)
-								if err != nil {
-									log.Error("Unable to marshal book record to JSON", err)
-								}
-								cache_set(search_isbn, string(book_json))
-								return volume, nil
-								}
-
-							},
-					},
+		Name: "Query",
+		Fields: graphql.Fields{
+		"book": &graphql.Field{
+			Type: book_type,
+			Args: graphql.FieldConfigArgument{
+				"isbn": &graphql.ArgumentConfig{
+					Type: graphql.String,
 			},
+		},
+
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			search_isbn := p.Args["isbn"].(string)
+			statsd_incr("book_requests")
+			log.Info("Searching for a book with isbn: ", search_isbn)
+
+			if search_isbn == "test"{
+				log.Info("isbn is set to test")
+				volume :=  map[string]interface{}{
+				"isbn":       fmt.Sprintf("test"),
+				"authors":     fmt.Sprintf("test"),
+				"title":          fmt.Sprintf("test"),
+				"description":    fmt.Sprintf("test"),
+				"published_date":        fmt.Sprintf("test"),
+				"publisher":      fmt.Sprintf("test"),
+				"print_type":     fmt.Sprintf("test"),
+				"average_rating":       fmt.Sprintf("%v\n",1),
+				"image_links":          fmt.Sprintf("test"),
+				"page_count":  fmt.Sprintf("%v\n",1),
+				}
+				return volume, nil
+			}
+
+			//query cache first
+			val, err := redis_cl.Get(search_isbn).Result()
+			if err != nil {
+				statsd_incr("cache_miss")
+				log.Info("No result in cache for ", search_isbn)
+			}else{
+				statsd_incr("cache_hit")
+				log.Info("Found a cache record for: ",search_isbn)
+				var result map[string]interface{}
+				json.Unmarshal([]byte(val), &result)
+													
+				volume :=  map[string]interface{}{
+				"isbn":       result["isbn"],
+				"authors":     result["authors"],
+				"title":          result["title"],
+				"description":    result["description"],
+				"published_date":        result["published_date"],
+				"publisher":      result["publisher"],
+				"print_type":     result["print_type"],
+				"average_rating":       result["average_rating"],
+				"image_links":          result["image_links"],
+				"page_count":  result["page_count"],
+				}
+				return volume, nil										
+					
+			}
+							
+
+			var book_record book_volume
+			start := time.Now()
+			book_record = get_book_by_isbn(search_isbn)
+
+			//measure and emit lookup time
+			elapsed := time.Since(start).Seconds()
+			statsd_gauge("book_search_time_s",elapsed)
+			
+			
+			items := book_record.Items[0]
+			volume_info := items.VolumeInfo
+			image_links := volume_info.ImageLinks
+
+			log.Info("Book found:  ", book_record.TotalItems)
+			if book_record.TotalItems < 1 {
+					log.Warn("No records found for isbn")
+					return nil, nil
+			} else {
+				log.Info("Book found:  ", book_record.TotalItems)
+
+				volume :=  map[string]interface{}{
+				"isbn":       fmt.Sprintf("%v",search_isbn),
+				"authors":     fmt.Sprintf(strings.Join(volume_info.Authors, ", ")),
+				"title":          fmt.Sprintf(volume_info.Title),
+				"description":    fmt.Sprintf(volume_info.Description),
+				"published_date":         fmt.Sprintf(volume_info.PublishedDate),
+				"publisher":      fmt.Sprintf(volume_info.Publisher),
+				"print_type":     fmt.Sprintf(volume_info.PrintType),
+				"average_rating":       fmt.Sprintf("%v",volume_info.AverageRating),
+				"image_links":          fmt.Sprintf(image_links.SmallThumbnail),
+				"page_count":  fmt.Sprintf("%v",volume_info.PageCount),
+			}
+							
+			//marshal book info to JSON for cache
+			book_json,err := json.Marshal(volume)
+			if err != nil {
+				log.Error("Unable to marshal book record to JSON", err)
+			}
+			cache_set(search_isbn, string(book_json))
+			return volume, nil
+			}
+
+			},
+			},
+		},
 	},
 )
 
@@ -190,9 +197,6 @@ func init() {
 	log.SetOutput(os.Stdout)
 	log.SetLevel(log.InfoLevel)
 
-	var cachedb_server string =  os.Getenv("CACHE_DB_SERVICE_HOST")
-	var cachedb_port string =  os.Getenv("CACHE_DB_SERVICE_PORT")
-	cachedb_address := cachedb_server + ":" + cachedb_port
 
 	pong, err := redis_cl.Ping().Result()
 	if err != nil {
@@ -218,12 +222,12 @@ func executeQuery(query string, schema graphql.Schema) *graphql.Result {
 
 func main() {
 	http.HandleFunc("/graphql", func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Access-Control-Allow-Origin", "*")
-			w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-			w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-		
-			result := executeQuery(r.URL.Query().Get("query"), schema)
-			json.NewEncoder(w).Encode(result)
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+	
+		result := executeQuery(r.URL.Query().Get("query"), schema)
+		json.NewEncoder(w).Encode(result)
 	})
 
 	fmt.Println("Now server is running on port 8222")
