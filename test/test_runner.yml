@@ -9,6 +9,10 @@
       shell: "/bin/bash ../BuildEnv/getVersion.sh"
       register: version_script
     
+    - name: stop all running containers
+      become: yes
+      shell: docker stop $(docker ps -a -q) && docker rm $(docker ps -a -q)
+      
     - name: Install test packages
       become: yes
       apt: name={{item}} state=present

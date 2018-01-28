@@ -10,3 +10,4 @@ spec:
   selector:
     service: book-api
     version: {{fullVersion}}
+  type: LoadBalancer    
