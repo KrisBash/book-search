@@ -12,7 +12,7 @@
     - name: stop all running containers
       become: yes
       shell: docker stop $(docker ps -a -q) && docker rm $(docker ps -a -q)
-      
+
     - name: Install test packages
       become: yes
       apt: name={{item}} state=present
@@ -26,6 +26,7 @@
         mode: 0755
       with_items:
         - "./test_book-api.rb"
+        - "./test_book-website.rb"
 
     - name: Run book-api container
       become: yes

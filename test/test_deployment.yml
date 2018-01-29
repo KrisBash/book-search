@@ -1,4 +1,3 @@
-
 - hosts: all
   connection: local
   vars:
@@ -6,8 +5,17 @@
     registryName: "{{ lookup('env','registryName') }}"
 
   tasks:
-    - name: test book-api interface
-      shell: "kubectl exec `kubectl get pods |grep book-api|awk '{print $1}'` -- curl -i -H 'Content-Type: application/json' -X POST -d '{\"query\": \"query {book(isbn: \"9780545010221\") {authors}}"}' http://127.0.0.1:8222/graphql\"
-    
+    - name: get deployment ip
+      shell: "/bin/bash -c \" kubectl get services |grep book-website |awk '{print $4}'\" "
+      register: deployment_ip
 
-    
+
+    - name: Test book-api
+      become: yes
+      shell: /bin/bash -c "./test_book-api.rb {{ deployment_ip.stdout }}"   
+      register: test_book_api
+
+    - name: Test book-website
+      become: yes
+      shell: /bin/bash -c "./test_book-website.rb {{ deployment_ip.stdout }}"   
+      register: test_book_website
