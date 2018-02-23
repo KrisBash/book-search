@@ -53,7 +53,7 @@ export class BookForm extends React.Component {
   }
 
   search_for_book(isbn) {
-    this.url_root = `http://127.0.0.1:8222/graphql?query={book(isbn:"` + isbn + `"){isbn,`;
+    this.url_root = `http://book-website:8222/graphql?query={book(isbn:"` + isbn + `"){isbn,`;
     this.fields = "";
     this.url_tail = `}}`;
     if (this.state.cb_book_authors){this.fields += "authors,"};
