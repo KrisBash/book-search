@@ -37,47 +37,10 @@
     
   - name: Install az packages
     become: yes
-    apt: name={{item}} state=present
-    allow_unauthenticated: yes
-    update_cache: yes
+    apt: name={{item}} state=present allow_unauthenticated=yes
     with_items:
       - apt-transport-https
       - azure-cli
-
-  - name: download Packer
-    become: yes
-    get_url:
-      url: "{{ packer_download_url }}"
-      dest: "{{ packer_archive_path }}"
-      force: "{{ packer_force_install }}"
-    register: download
-    when: not packer_bin.stat.exists
-
-  - name: Configured packer file permissions
-    file:
-      state: directory
-      path: "{{ item }}"
-      mode: 0755
-      owner: root
-      group: root
-    with_items:
-      - "{{ packer_archive_path }}"
-      - "{{ packer_binary_path }}"
-    when: not packer_bin.stat.exists
-
-  - name: extract Packer archive
-    unarchive:
-      src: "{{ packer_archive_path }}/{{ packer_download_url | basename }}"
-      dest: "{{ packer_binary_path }}"
-      copy: False
-    when: download.changed
-
-  - name: set packer binary acls
-    file:
-      path: "{{ item }}"
-      state: file
-      mode: 0755
-    with_fileglob: "{{ packer_binary_path }}/packer*"
 
   - name: Install ruby packages
     become: yes
