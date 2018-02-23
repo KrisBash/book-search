@@ -18,7 +18,7 @@ spec:
         - name: BOOK_API_PORT
           value: "8222"
         - name: STATSD_SERVER
-          value: "192.168.1.120"
+          value: "polling-telegraf-s.tick"
         - name: STATSD_PORT
           value: "8125"
         image: "{{registryUrl}}/{{fullVersion}}/book-api"
