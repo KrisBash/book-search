@@ -8,7 +8,11 @@ require 'rest-client'
 
 
 #test query
-@url = "http://127.0.0.1:8222/graphql?"
+@ipAddr = ARGV[0]
+if @ipAddr.nil?
+    @ipAddr = "127.0.0.1"
+end
+@url = "http://" + @ipAddr + ":8222/graphql?"
 @test_result = true
 
 def test_query(qs, str)

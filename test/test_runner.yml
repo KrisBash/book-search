@@ -1,12 +1,18 @@
 - hosts: all
   connection: local
   vars:
+    registryUrl: "{{ lookup('env','registryUrl') }}"
+    registryName: "{{ lookup('env','registryName') }}"
 
   tasks:
     - name: export fullVersion
       shell: "/bin/bash ../BuildEnv/getVersion.sh"
       register: version_script
     
+    - name: stop all running containers
+      become: yes
+      shell: docker stop $(docker ps -a -q) && docker rm $(docker ps -a -q)
+
     - name: Install test packages
       become: yes
       apt: name={{item}} state=present
@@ -20,12 +26,13 @@
         mode: 0755
       with_items:
         - "./test_book-api.rb"
+        - "./test_book-website.rb"
 
     - name: Run book-api container
       become: yes
       docker_container:
         name: bookapi-{{ version_script.stdout }}
-        image: "book-api:latest"
+        image: "{{registryUrl}}/{{ version_script.stdout }}/book-api:latest"
         command: "/go/src/app/src/book-api"
         published_ports: "8222:8222"
         state: started
@@ -46,8 +53,7 @@
       become: yes
       docker_container:
         name: bookwebsite-{{ version_script.stdout }}
-        image: "book-website:latest"
-        command: "/go/src/app/src/book-api"
+        image: "{{registryUrl}}/{{ version_script.stdout }}/book-website:latest"
         published_ports: "80:80"
         state: started
         detach: yes
