@@ -38,25 +38,12 @@
         - docker-registry
         - docker.io
 
- # - name: Install Docker Compose
- #   become: yes
- #   get_url:
- #     url: 'https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-Linux-x86_64'
- #     dest: '/usr/local/bin/docker-compose'
- #     force: True
- #     owner: 'root'
- #     group: 'root'
- #     mode: '0755'
- #   when: not docker_compose.stat.exists
-
-  - name: remove docker-py
-    pip:
-      name: docker-py
-      state: absent
-
   - name: Install docker python module
     pip:
-      name: "docker-compose==1.12.0"
+      name: "{{item}}"
+    with_items:
+      - "docker"
+      - "docker-compose"
 
   - name: add Kubernetes apt repo
     apt_repository:
