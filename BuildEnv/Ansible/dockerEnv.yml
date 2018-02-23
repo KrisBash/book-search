@@ -58,7 +58,15 @@
       - kubectl
     when: not admin_conf.stat.exists    
 
+  - name: Instantiate /var/cache/helm
+    become: yes
+    file:
+      path: /var/cache/helm
+      state: directory
+      mode: 0755
+
   - name: download Helm
+    become: yes
     get_url:
       url: "https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get"
       dest: "/var/cache/helm/get_helm.sh"
@@ -66,6 +74,7 @@
     when: not helm_bin.stat.exists
 
   - name: Set helm script acls
+    become: yes
     file:
       path: "{{ item }}"
       state: file
@@ -74,6 +83,7 @@
     when: not helm_bin.stat.exists
 
   - name: install Helm
+    become: yes
     shell: /var/cache/helm/get_helm.sh
     when: not helm_bin.stat.exists
 
