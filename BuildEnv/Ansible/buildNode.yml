@@ -38,6 +38,7 @@
   - name: Install az packages
     become: yes
     apt: name={{item}} state=present
+    allow_unauthenticated: yes
     with_items:
       - apt-transport-https
       - azure-cli
