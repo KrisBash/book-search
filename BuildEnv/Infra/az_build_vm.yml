@@ -1,34 +1,81 @@
 - hosts: all
   connection: local
   vars:
-    client_id: "{{ lookup('env','client_id') }}"
-    client_secret: "{{ lookup('env','client_secret') }}"
-    tenant_id: "{{ lookup('env','tenant_id') }}"
-    rg_name: "{{ lookup('env','vm_rg_name') }}"
-    admin_username: "{{ lookup('env','admin_username') }}"
-    admin_ssh_key: "{{ lookup('env','admin_ssh_key') }}"
-
+    subnet_cidr: "10.11.12.0/24"
+    ssh_source_prefix: "131.107.0.0/16"
+    #ansible-playbook az_build_vm.yml --extra-vars "build_vm_location build_vm_name= rg_name= gitlab_token= admin_username= admin_ssh_key="
+  
   tasks:
-  - name: AZ Login
-    shell: az login --service-principal -u {{client_id}} -p {{client_secret}} --tenant {{tenant_id}}
-    no_log: true
 
   - name: Instantiate resource group
     azure_rm_resourcegroup:
-      name: {{rg_name}}
-      location: {{build_vm_location}}
+      name: "{{ rg_name }}"
+      location: "{{ build_vm_location }}"
       state: present
-    
-  - name: Create VM with defaults
+
+  - name: Get facts for one Public IP
+    azure_rm_publicip_facts:
+      resource_group: "{{ rg_name }}"
+      name: "{{build_vm_name}}_pubip"
+      ignore_errors: yes
+      register: public_ip_addresses
+
+  - name: Create virtual network
+    azure_rm_virtualnetwork:
+      name: "{{rg_name}}_vnet"
+      resource_group: "{{rg_name}}"
+      address_prefixes_cidr:
+        - "{{ subnet_cidr }}"
+
+  - name: Create subnet
+    azure_rm_subnet:
+      name:  "{{rg_name}}_subnet"
+      state: present
+      virtual_network_name: "{{rg_name}}_vnet"
+      resource_group: "{{ rg_name }}"
+      address_prefix_cidr: "{{ subnet_cidr }}"
+
+  - name: Create public IP
+    azure_rm_publicipaddress:
+      resource_group: "{{rg_name}}"
+      name: "{{build_vm_name}}_pubip"
+      allocation_method: Static  
+
+  - name: Create NSG
+    azure_rm_securitygroup:
+      resource_group: "{{rg_name}}"
+      name: "{{rg_name}}_nsg"
+      rules:
+        - name: SSH
+          source_address_prefix: "{{ ssh_source_prefix }}"
+          protocol: Tcp
+          destination_port_range: 22
+          access: Allow
+          priority: 1001
+          direction: Inbound
+
+  - name: Create vNIC
+    azure_rm_networkinterface:
+      resource_group: "{{rg_name}}"
+      name: "{{build_vm_name}}_nic"
+      virtual_network: "{{rg_name}}_vnet"
+      subnet: "{{rg_name}}_subnet"
+      public_ip_name: "{{build_vm_name}}_pubip"
+      security_group: "{{rg_name}}_nsg"  
+
+  - name: Create Linux build VM
     azure_rm_virtualmachine:
-      resource_group: {{rg_name}}
-      name: {{build_vm_name}}
-      location: {{build_vm_location}}
-      admin_username: {{admin_username}}
+      resource_group: "{{rg_name}}"
+      name: "{{build_vm_name}}"
+      location: "{{ build_vm_location }}"
+      admin_username: "{{ admin_username }}"
       vm_size: Standard_A1
-      network_interfaces: "{{build_vm_name}}_nic1"
+      virtual_network_name: "{{rg_name}}_vnet"
+      subnet_name: "{{rg_name}}_subnet"
+      network_interfaces: "{{build_vm_name}}_nic"
+      ssh_password_enabled: false
       ssh_public_keys:
-        - path: /home/{[admin_username}}/.ssh/authorized_keys
+        - path: /home/{{admin_username}}/.ssh/authorized_keys
           key_data: "{{admin_ssh_key}}"
       image:
         offer: UbuntuServer
@@ -36,14 +83,14 @@
         sku: '16.04-LTS'
         version: latest
 
-  - name: Deploy gitlab-runner to new build VM
+  - name: Deploy gitlab-runner to new build VM and register
     azure_rm_virtualmachine_extension:
       name: gitlab-runner-install
-      location: {{build_vm_location}}
-      resource_group: {{rg_name}}
-      virtual_machine_name: {{build_vm_name}}
+      location: "{{ build_vm_location }}"
+      resource_group: "{{ rg_name }}"
+      virtual_machine_name: "{{ build_vm_name }}"
       publisher: Microsoft.OSTCExtensions
       virtual_machine_extension_type: CustomScriptForLinux
       type_handler_version: 1.5
-      settings: '{"commandToExecute": "curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.deb.sh | bash && apt-get update && apt-get install gitlab-runner "}'
+      settings: '{"fileUris":["http://MyAccount.blob.core.windows.net/vhds/MyShellScript.sh"],"commandToExecute": "export gitlab_token={{ gitlab_token }}; sh gitlab_runner.sh"}'
       auto_upgrade_minor_version: true
