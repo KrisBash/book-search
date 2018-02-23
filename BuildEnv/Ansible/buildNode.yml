@@ -39,6 +39,7 @@
     become: yes
     apt: name={{item}} state=present
     allow_unauthenticated: yes
+    update_cache: yes
     with_items:
       - apt-transport-https
       - azure-cli
