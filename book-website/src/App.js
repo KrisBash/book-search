@@ -53,9 +53,10 @@ export class BookForm extends React.Component {
   }
 
   search_for_book(isbn) {
-    var api_uri = process.env.BOOK_API_SERVICE_HOST + ":" + process.env.BOOK_API_SERVICE_PORT
-    console.log(api_uri)
-    this.url_root = `http://book-api.default.svc.cluster.local:8222/graphql?query={book(isbn:"` + isbn + `"){isbn,`;
+    
+    console.log("api_host = " + api_host)
+    console.log("api_port = " + api_port)
+    this.url_root = `http://10.0.229.194:8222/graphql?query={book(isbn:"` + isbn + `"){isbn,`;
     this.fields = "";
     this.url_tail = `}}`;
     if (this.state.cb_book_authors){this.fields += "authors,"};
@@ -68,7 +69,7 @@ export class BookForm extends React.Component {
     if (this.state.cb_book_print_type){this.fields += "print_type,"};
     this.fields  =  this.fields.substring(0, this.fields.length - 1);
     this.apiUrl = this.url_root + this.fields + this.url_tail
-    //this.apiUrl = `http://127.0.0.1:8222/graphql?query={book(isbn:"9780545010221") {isbn,title,description, authors,page_count,average_rating}}`
+
     return  axios.get(this.apiUrl,{
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -209,7 +210,10 @@ class Header extends Component {
 }
 
 class App extends Component {
-
+  componentWillMount(){
+    export const api_host = process.env.BOOK_API_SERVICE_HOST
+    export const api_port = process.env.BOOK_API_SERVICE_PORT
+  }
   componentDidMount() {
     
   }
