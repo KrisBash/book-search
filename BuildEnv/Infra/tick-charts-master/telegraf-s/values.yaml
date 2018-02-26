@@ -286,21 +286,22 @@ config:
 ##        send: "ssh"
 ##        expect: "ssh"
 ##        read_timeout: "1s"
-##      nginx:
-##        urls: 
-##          - "http://nginx.kube-system:18080/status"
+      nginx:
+        urls: 
+          - "http://book-website.default"
 ##      nsq:
 ##        endpoints: 
 ##          - "http://localhost:4151"
 ##      phpfpm:
 ##        urls: 
 ##          - "http://localhost/status"
-##      ping:
-##        urls: 
-##          - "www.google.com"
-##        count: 1
-##        ping_interval: 1.0
-##        timeout: 1.0
+      ping:
+        urls: 
+          - "book-website.default"
+          - "book-api.default"
+        count: 1
+        ping_interval: 1.0
+        timeout: 1.0
 ##        interface: ""
 ##      postgresql:
 ##        address: "postgres://user:password@localhost?sslmode=disable"
