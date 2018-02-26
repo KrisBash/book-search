@@ -60,7 +60,7 @@
 
     - name: Test book-website
       become: yes
-      shell: /bin/bash -c "./test_book-website.rb"   
+      shell: /bin/bash -c "sleep 10;./test_book-website.rb"   
       register: test_book_website
 
     - name: stop book-website container

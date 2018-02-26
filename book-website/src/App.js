@@ -53,7 +53,7 @@ export class BookForm extends React.Component {
   }
 
   search_for_book(isbn) {
-    this.url_root = `http://book-api:8222/graphql?query={book(isbn:"` + isbn + `"){isbn,`;
+    this.url_root = `http://` + api_uri +`/graphql?query={book(isbn:"` + isbn + `"){isbn,`;
     this.fields = "";
     this.url_tail = `}}`;
     if (this.state.cb_book_authors){this.fields += "authors,"};
@@ -209,6 +209,7 @@ class Header extends Component {
 class App extends Component {
 
   componentDidMount() {
+    const api_uri = `${BOOK_API_SERVICE_HOST}:${BOOK_API_SERVICE_PORT}`
   }
   render() {
     return (
