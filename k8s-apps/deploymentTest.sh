@@ -1,7 +1,7 @@
 #!/bin/bash
 source ./BuildEnv/getVersion.sh
 
-expectedPods=3
+expectedPods=`kubectl get deployments |grep $fullVersion |wc -l`
 runningPods=`kubectl get pods |grep $fullVersion|grep Running |wc -l`
 
 res=0
@@ -28,14 +28,11 @@ else
     exit 100
 fi
 
-#Container enum
-images=( "book-api" "book-website" "cache-db" )
-
 #Enum and purge repositories
 echo "Dumping pod logs..."
 
 activePods=`kubectl get pods |grep  $fullVersion|awk '{print $1}'`
 for pod in $activePods ; do
-    echo "Logs for pod: pod "
+    echo "Logs for pod: $pod "
     kubectl logs $pod
 done
