@@ -51,11 +51,9 @@ export class BookForm extends React.Component {
   }
 
   search_for_book(isbn) {
-    const api_host = process.env.BOOK_API_SERVICE_HOST
-    const api_port = process.env.BOOK_API_SERVICE_PORT
     console.log("api_host = " + api_host)
     console.log("api_port = " + api_port)
-    this.url_root = `http://10.0.229.194:8222/graphql?query={book(isbn:"` + isbn + `"){isbn,`;
+    this.url_root = `http://127.0.0.1/graphql?query={book(isbn:"` + isbn + `"){isbn,`;
     this.fields = "";
     this.url_tail = `}}`;
     if (this.state.cb_book_authors){this.fields += "authors,"};
@@ -210,10 +208,6 @@ class Header extends Component {
 
 class App extends Component {
   componentWillMount(){
-    const api_host = process.env.BOOK_API_SERVICE_HOST
-    const api_port = process.env.BOOK_API_SERVICE_PORT
-    console.log ("host" + api_host)
-    console.log ("port" + api_port)
   }
   componentDidMount() {
     
