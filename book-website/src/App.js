@@ -211,8 +211,8 @@ class Header extends Component {
 
 class App extends Component {
   componentWillMount(){
-    export const api_host = process.env.BOOK_API_SERVICE_HOST
-    export const api_port = process.env.BOOK_API_SERVICE_PORT
+    const api_host = process.env.BOOK_API_SERVICE_HOST
+    const api_port = process.env.BOOK_API_SERVICE_PORT
   }
   componentDidMount() {
     
