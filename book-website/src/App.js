@@ -213,6 +213,8 @@ class App extends Component {
   componentWillMount(){
     const api_host = process.env.BOOK_API_SERVICE_HOST
     const api_port = process.env.BOOK_API_SERVICE_PORT
+    console.log ("host" + api_host)
+    console.log ("port" + api_port)
   }
   componentDidMount() {
     
