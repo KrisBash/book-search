@@ -51,8 +51,6 @@ export class BookForm extends React.Component {
   }
 
   search_for_book(isbn) {
-    console.log("api_host = " + api_host)
-    console.log("api_port = " + api_port)
     this.url_root = `http://127.0.0.1/graphql?query={book(isbn:"` + isbn + `"){isbn,`;
     this.fields = "";
     this.url_tail = `}}`;
