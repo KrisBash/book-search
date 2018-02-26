@@ -55,7 +55,7 @@ export class BookForm extends React.Component {
   search_for_book(isbn) {
     var api_uri = process.env.BOOK_API_SERVICE_HOST + ":" + process.env.BOOK_API_SERVICE_PORT
     console.log(api_uri)
-    this.url_root = `http://book-api.default:8222/graphql?query={book(isbn:"` + isbn + `"){isbn,`;
+    this.url_root = `http://book-api.default.svc.cluster.local:8222/graphql?query={book(isbn:"` + isbn + `"){isbn,`;
     this.fields = "";
     this.url_tail = `}}`;
     if (this.state.cb_book_authors){this.fields += "authors,"};
