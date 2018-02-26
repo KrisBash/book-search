@@ -1,8 +1,6 @@
 import React, { Component } from 'react';
 import logo from '../books-banner.jpg';
 import axios from 'axios';
-//import ReactDOM from 'react-dom';
-//import jsxToString from 'jsx-to-string';
 import './App.css';
 
 export const BookDetail = (props) => {
@@ -53,7 +51,8 @@ export class BookForm extends React.Component {
   }
 
   search_for_book(isbn) {
-    
+    const api_host = process.env.BOOK_API_SERVICE_HOST
+    const api_port = process.env.BOOK_API_SERVICE_PORT
     console.log("api_host = " + api_host)
     console.log("api_port = " + api_port)
     this.url_root = `http://10.0.229.194:8222/graphql?query={book(isbn:"` + isbn + `"){isbn,`;
