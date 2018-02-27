@@ -51,7 +51,7 @@ export class BookForm extends React.Component {
   }
 
   search_for_book(isbn) {
-    this.url_root = `/graphql?query={book(isbn:"` + isbn + `"){isbn,`;
+    this.url_root = `/graphql/graphql?query={book(isbn:"` + isbn + `"){isbn,`;
     this.fields = "";
     this.url_tail = `}}`;
     if (this.state.cb_book_authors){this.fields += "authors,"};
