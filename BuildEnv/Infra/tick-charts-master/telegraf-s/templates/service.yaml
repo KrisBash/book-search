@@ -27,6 +27,7 @@ spec:
     {{- end }}
     {{- if eq $key "udp-listener" }}
   - port: {{ trimPrefix ":" $value.service_address | int64 }}
+    protocol: "UDP"
     targetPort: {{ trimPrefix ":" $value.service_address | int64 }}
     name: "udp_listener"
     {{- end }}
