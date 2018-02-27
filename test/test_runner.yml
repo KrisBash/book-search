@@ -62,6 +62,7 @@
       become: yes
       shell: /bin/bash -c "sleep 10;./test_book-website.rb"   
       register: test_book_website
+      ignore_errors: yes
 
     - name: stop book-website container
       become: yes
