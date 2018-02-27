@@ -362,6 +362,7 @@ config:
 ##        max_line_size: 0
     statsd:
       service_address: ":8125"
+      protocol: "tcp"
       percentiles: 
         - 50
         - 95

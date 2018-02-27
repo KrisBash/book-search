@@ -17,7 +17,10 @@ func get_addr()(address string){
 func statsd_incr(t string){
 
 	statsd_address := get_addr()
-	c, err := statsd.New(statsd.Address(statsd_address))
+	c, err := statsd.New(
+		statsd.Network("tcp"),
+		statsd.Address(statsd_address)
+	)
 	if err != nil {
 		log.Print(err)
 		//fmt.Println("%v",err)
@@ -29,7 +32,10 @@ func statsd_incr(t string){
 
 func statsd_gauge(t string, v float64){
 	statsd_address := get_addr()
-	c, err := statsd.New(statsd.Address(statsd_address))
+	c, err := statsd.New(
+		statsd.Network("tcp"),
+		statsd.Address(statsd_address)
+	)
 	if err != nil {
 		log.Print(err)
 		//fmt.Println("%v",err)
