@@ -1,8 +1,8 @@
 - hosts: all
   connection: local
   vars:
-    registryUrl: "{{ lookup('env','registryUrl') }}"
-    registryName: "{{ lookup('env','registryName') }}"
+    registryUrl: "{{ lookup('env','registry_url') }}"
+    registryName: "{{ lookup('env','registry_name') }}"
 
   tasks:
     - name: export fullVersion
