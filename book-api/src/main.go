@@ -112,10 +112,10 @@ var queryType = graphql.NewObject(
 			//query cache first
 			val, err := redis_cl.Get(search_isbn).Result()
 			if err != nil {
-				statsd_incr("cache_miss")
+				statsd_incr("book_cache_miss")
 				log.Info("No result in cache for ", search_isbn)
 			}else{
-				statsd_incr("cache_hit")
+				statsd_incr("book_cache_hit")
 				log.Info("Found a cache record for: ",search_isbn)
 				var result map[string]interface{}
 				json.Unmarshal([]byte(val), &result)
