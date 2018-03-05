@@ -1,0 +1,12 @@
+- hosts: all
+  connection: local
+  vars:
+
+  tasks:
+
+  - name: Exec compliance checks
+    become: yes
+    shell: "inspec exec {{ item }} --reporter=progress json:/var/cache/`echo {{ item }}|tr '/' '_'|tr -d ':' "
+    with_items: 
+    -  "https://github.com/dev-sec/linux-baseline"
+    ignore_errors: yes

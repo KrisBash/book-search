@@ -7,4 +7,5 @@
 - include: azEnv.yml
 - include: goLang.yml
 - include: dockerEnv.yml
+- include: complianceEnv.yml
 

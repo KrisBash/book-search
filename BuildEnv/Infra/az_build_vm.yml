@@ -77,19 +77,19 @@
         - path: /home/{{admin_username}}/.ssh/authorized_keys
           key_data: "{{admin_ssh_key}}"
       image:
-        offer: UbuntuServer
-        publisher: Canonical
-        sku: '16.04-LTS'
+        offer: CentOS
+        publisher: "OpenLogic"
+        sku: '7.3'
         version: latest
 
-  - name: Deploy gitlab-runner to new build VM and register
-    azure_rm_virtualmachine_extension:
-      name: gitlab-runner-install
-      location: "{{ build_vm_location }}"
-      resource_group: "{{ rg_name }}"
-      virtual_machine_name: "{{ build_vm_name }}"
-      publisher: Microsoft.OSTCExtensions
-      virtual_machine_extension_type: CustomScriptForLinux
-      type_handler_version: 1.5
-      settings: '{"fileUris":["https://rawgit.com/KrisBash/book-search/master/BuildEnv/Infra/gitlab_runner.sh"],"commandToExecute": "/bin/bash -c \"export gitlab_token={{ gitlab_token }}; ./gitlab_runner.sh\""}'
-      auto_upgrade_minor_version: true
+  #- name: Deploy gitlab-runner to new build VM and register
+  #  azure_rm_virtualmachine_extension:
+  #    name: gitlab-runner-install
+  #    location: "{{ build_vm_location }}"
+  #    resource_group: "{{ rg_name }}"
+  ##    virtual_machine_name: "{{ build_vm_name }}"
+   #   publisher: Microsoft.OSTCExtensions
+   #   virtual_machine_extension_type: CustomScriptForLinux
+   #   type_handler_version: 1.5
+   #   settings: '{"fileUris":["https://rawgit.com/KrisBash/book-search/master/BuildEnv/Infra/gitlab_runner.sh"],"commandToExecute": "/bin/bash -c \"export gitlab_token={{ gitlab_token }}; ./gitlab_runner.sh\""}'
+   #   auto_upgrade_minor_version: true

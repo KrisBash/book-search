@@ -17,8 +17,8 @@ spec:
     {{- if eq $key "statsd" }}
   - port: {{ trimPrefix ":" $value.service_address | int64 }}
     targetPort: {{ trimPrefix ":" $value.service_address | int64 }}
-    name: "statsd"
     protocol: "UDP"
+    name: "statsd"
     {{- end }}
     {{- if eq $key "tcp-listener" }}
   - port: {{ trimPrefix ":" $value.service_address | int64 }}
@@ -27,8 +27,8 @@ spec:
     {{- end }}
     {{- if eq $key "udp-listener" }}
   - port: {{ trimPrefix ":" $value.service_address | int64 }}
-    protocol: "UDP"
     targetPort: {{ trimPrefix ":" $value.service_address | int64 }}
+    protocol: "UDP"    
     name: "udp_listener"
     {{- end }}
     {{- if eq $key "webhooks" }}

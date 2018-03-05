@@ -1,0 +1,30 @@
+- hosts: all
+  connection: local
+  vars:
+  - inspec_download_url: "https://packages.chef.io/files/stable/inspec/2.0.32/ubuntu/16.04/inspec_2.0.32-1_amd64.deb"
+
+  tasks:
+
+  - name: check if InSPec has downloaded
+    stat: path=/var/cache/inspec.deb
+    register: inspec_package
+
+  - name: check if InSPec has been installed
+    stat: path=/usr/bin/inspec
+    register: inspec_bin
+
+  - name: download InSpec package
+    become: yes
+    get_url:
+      url: "{{ inspec_download_url }}"
+      dest: "/var/cache/inspec.deb"
+    register: download
+    when: not inspec_package.stat.exists
+
+  - name: Install inspec package
+    become: yes
+    apt:
+      deb: "/var/cache/inspec.deb"
+    when: not inspec_package.stat.exists
+    
+
