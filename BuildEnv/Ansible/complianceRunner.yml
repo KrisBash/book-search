@@ -19,14 +19,14 @@
       
     - name: Exec build node compliance checks
       become: yes
-      shell: "inspec exec {{ item }} --reporter=json-min json:/var/cache/compliance_results/`echo {{ item }}|tr '/' '_'|tr -d ':' "
+      shell: "inspec exec {{ item }} --reporter=json-min json:/var/cache/compliance_results/`echo {{ item }}|tr '/' '_'|tr -d ':' `"
       with_items: 
       -  "https://github.com/dev-sec/linux-baseline"
       ignore_errors: yes
 
     - name: exec remote compliance checks
       become: yes
-      shell: "inspec exec {{ item }} -t ssh://{{ ssh_user }}@{{ aks_ssh_ip.stdout }} -p {{ ssh_port }} -i {{ key_file }} --reporter=json-min json:/var/cache/compliance_results/`echo {{ item }}|tr '/' '_'|tr -d ':' "
+      shell: "inspec exec {{ item }} -t ssh://{{ ssh_user }}@{{ aks_ssh_ip.stdout }} -p {{ ssh_port }} -i {{ key_file }} --reporter=json-min json:/var/cache/compliance_results/`echo {{ item }}|tr '/' '_'|tr -d ':' `"
       with_items: 
       -  "https://github.com/dev-sec/cis-kubernetes-benchmark"
       -  "https://github.com/dev-sec/cis-docker-benchmark"
