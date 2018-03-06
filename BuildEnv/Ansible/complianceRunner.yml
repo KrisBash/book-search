@@ -1,12 +1,35 @@
 - hosts: all
   connection: local
   vars:
+  - ssh_port: 9022
+  - ssh_user: "{{ lookup('env','my_user') }}"
+  - my_key: "{{ lookup('env','my_key') }}"
+  - key_file: "{{ lookup('env','key_file') }}"
 
   tasks:
+    - name: get aks-ssh ip
+      shell: kubectl get services |grep aks-ssh |awk '{print $4}'
+      register: aks_ssh_ip
 
-  - name: Exec compliance checks
-    become: yes
-    shell: "inspec exec {{ item }} --reporter=progress json:/var/cache/`echo {{ item }}|tr '/' '_'|tr -d ':' "
-    with_items: 
-    -  "https://github.com/dev-sec/linux-baseline"
-    ignore_errors: yes
+    - name: Create key dir
+      file:
+        path: "/var/cache/compliance_results"
+        state: directory
+           
+      
+    - name: Exec build node compliance checks
+      become: yes
+      shell: "inspec exec {{ item }} --reporter=json-min json:/var/cache/compliance_results/`echo {{ item }}|tr '/' '_'|tr -d ':' "
+      with_items: 
+      -  "https://github.com/dev-sec/linux-baseline"
+      ignore_errors: yes
+
+    - name: exec remote compliance checks
+      become: yes
+      shell: "inspec exec {{ item }} -t ssh://{{ ssh_user }}@{{ aks_ssh_ip.stdout }} -p {{ ssh_port }} -i {{ key_file }} --reporter=json-min json:/var/cache/compliance_results/`echo {{ item }}|tr '/' '_'|tr -d ':' "
+      with_items: 
+      -  "https://github.com/dev-sec/cis-kubernetes-benchmark"
+      -  "https://github.com/dev-sec/cis-docker-benchmark"
+      ignore_errors: yes
+
+

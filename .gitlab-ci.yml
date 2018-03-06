@@ -52,6 +52,13 @@ deployToK8s:
   tags:
     - linux
 
+complianceEval:
+  stage: deploy
+  script:
+    - /bin/bash -c "ansible-playbook -i \"localhost,\" -c local ./BuildEnv/Ansible/complianceRunner.yml --verbose"   
+  tags:
+    - linux
+    
 purgeACRrepos:
   stage: cleanup
   script:

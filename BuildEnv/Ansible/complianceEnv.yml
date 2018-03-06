@@ -3,6 +3,7 @@
   vars:
   - inspec_download_url: "https://packages.chef.io/files/stable/inspec/2.0.32/ubuntu/16.04/inspec_2.0.32-1_amd64.deb"
   - my_key: "{{ lookup('env','my_key') }}"
+  - key_file: "{{ lookup('env','key_file') }}"
 
   tasks:
 
@@ -27,23 +28,16 @@
     apt:
       deb: "/var/cache/inspec.deb"
     when: not inspec_package.stat.exists
-    
+
   - name: Create key dir
     file:
-      path: "~/ssh/"
+      path: "~/.ssh/"
       state: directory
-      mode: 0600
-    no_log: true
- 
-  - name: set key file properties
-    file:
-      path: "~/ssh/id_rsa"
-      state: file
-      mode: 0600
+      mode: 0700
     no_log: true
 
   - name: set key contents
-    copy:
-      content: "{{ my_key }}"
-      dest: "~/ssh/id_rsa"
+    shell: echo  "{{ my_key }}" > {{ key_file }} && chmod 0600 {{ key_file }}
     no_log: true
+
+

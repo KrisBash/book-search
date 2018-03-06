@@ -7,8 +7,14 @@
     packer_binary_path: "/usr/local/bin"
     packer_plugins: {}
     packer_force_install: False
+    human_log_plugin: "human_log.py"  
+    callback_dir: "/usr/share/ansible/plugins/callback/"
 
   tasks:
+
+  - name: check if human_log is downloaded
+    stat: path={{ callback_dir }}/{{human_log_plugin}}
+    register: callback_plugin
 
   - name: check if packer is installed
     stat: path=/usr/local/bin/packer
@@ -28,6 +34,28 @@
       url: "https://packages.microsoft.com/keys/microsoft.asc"
       state: present
     become: yes
+
+  - name: create callback plugins dir
+    become: yes
+    file:
+      path: "{{ callback_dir }}"
+      state: directory
+
+  - name: set ansible callback config
+    become: yes
+    lineinfile:
+      path: /etc/ansible/ansible.cfg
+      regexp: '^callback_plugins=.+'
+      line: "callback_plugins={{ callback_dir }}"
+
+  - name: download human callback plugin
+    become: yes
+    get_url:
+      url: "https://raw.githubusercontent.com/n0ts/ansible-human_log/master/human_log.py"
+      dest: "{{ callback_dir }}/{{human_log_plugin}}"
+    register: download
+    when: not callback_plugin.stat.exists
+  
 
   - name: Add azure apt repo
     apt_repository:
