@@ -17,7 +17,6 @@
         path: "{{ report_output }}"
         state: directory
            
-      
     - name: Exec build node compliance checks
       become: yes
       shell: "inspec exec {{ item }} --reporter=documentation:{{ report_output }}`echo {{ item }}|tr '/' '_'|tr -d ':' `"
@@ -38,5 +37,13 @@
     - name: log compliance results
       become: yes 
       shell: "cat {{ report_output }}*"
+
+    - name: archive compliance reports
+      shell: |
+        cd ~
+        git clone $report_repo
+        cp {{ report_output }}/* ~/Compliance_Reports
+        git commit -m "Update compliance reports"
+        git push
 
 

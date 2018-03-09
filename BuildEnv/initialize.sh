@@ -23,4 +23,3 @@ then
 fi
 cp ./BuildEnv/initialize.sh /tmp/initialize.sh 
 
-printenv
