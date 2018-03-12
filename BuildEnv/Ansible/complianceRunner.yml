@@ -42,6 +42,7 @@
         git clone {{ report_repo }}
         cp {{ report_output }}/* ~/Compliance_Reports
         cd ~/Compliance_Reports
+        git add .
         git commit -m "Update compliance reports"
         git push
 
