@@ -6,6 +6,7 @@
   - my_key: "{{ lookup('env','my_key') }}"
   - key_file: "{{ lookup('env','key_file') }}"
   - report_output: "/var/cache/compliance_results/"
+  - report_repo: "{{ lookup('env','report_repo') }}"
 
   tasks:
     - name: get aks-ssh ip
@@ -37,7 +38,7 @@
     - name: archive compliance reports
       shell: |
         cd ~
-        git clone $report_repo
+        git clone {{ report_repo }}
         cp {{ report_output }}/* ~/Compliance_Reports
         git commit -m "Update compliance reports"
         git push
