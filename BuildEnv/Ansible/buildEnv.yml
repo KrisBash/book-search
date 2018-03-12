@@ -1,11 +1,28 @@
 - hosts: all
   connection: local
   vars:
-    fullVersion: "{{ lookup('env','fullVersion') }}"
+  - fullVersion: "{{ lookup('env','fullVersion') }}"
+  - checksum_file: "~/build_env.md5sum"
 
-- include: buildNode.yml
-- include: azEnv.yml
-- include: goLang.yml
-- include: dockerEnv.yml
-- include: complianceEnv.yml
+  tasks:
 
+  - name: Register checksum of build environment playbooks
+    shell: "find  ./ -type f -exec md5sum {} \\; | md5sum"
+    register: build_env_checksum
+
+  - name: Register checksum of build environment playbooks
+    command: head -n1 {{ checksum_file }}
+    register: cached_checksum
+    ignore_errors: yes
+
+  - shell: ansible-playbook -i "localhost," --verbose {{ item }}
+    when: (build_env_checksum.stdout  != cached_checksum.stdout )
+    with_items: 
+    - "./buildNode.yml"
+    - "./azEnv.yml"
+    - "./goLang.yml"
+    - "./dockerEnv.yml"
+    - "./complianceEnv.yml"
+   
+  - name: write checksum to file
+    shell: echo  "{{ build_env_checksum.stdout }}" >{{ checksum_file }}

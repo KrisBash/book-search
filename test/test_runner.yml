@@ -12,6 +12,7 @@
     - name: stop all running containers
       become: yes
       shell: docker stop $(docker ps -a -q) && docker rm $(docker ps -a -q)
+      ignore_errors: yes
 
     - name: Install test packages
       become: yes
