@@ -34,10 +34,6 @@
       ignore_errors: yes
       no_log: true
 
-    - name: log compliance results
-      become: yes 
-      shell: "cat {{ report_output }}*"
-
     - name: archive compliance reports
       shell: |
         cd ~
