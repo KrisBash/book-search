@@ -1,8 +1,12 @@
 variables:
 #  GIT_STRATEGY: clone
 
+before_script:
+- /bin/bash ./BuildEnv/getVersion.sh 
+- /bin/bash ./BuildEnv/initialize.sh
+- /bin/bash -c "ansible-playbook -i \"localhost,\" -c local ./BuildEnv/Ansible/buildEnv.yml --verbose"
+
 stages:
-  - bootstrap
   - build
   - cleanup_builds
   - test
@@ -11,15 +15,6 @@ stages:
   - activateProd
   # monitoring
   - cleanup
- 
-prepare:
-  stage: bootstrap
-  script:
-    - /bin/bash ./BuildEnv/getVersion.sh 
-    - /bin/bash ./BuildEnv/initialize.sh
-    - /bin/bash -c "ansible-playbook -i \"localhost,\" -c local ./BuildEnv/Ansible/buildEnv.yml --verbose"
-  tags:
-    - linux
 
 buildContainers:
   stage: build
