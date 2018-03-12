@@ -38,8 +38,10 @@
     - name: archive compliance reports
       shell: |
         cd ~
+        rm -rf ~/Compliance_Reports
         git clone {{ report_repo }}
         cp {{ report_output }}/* ~/Compliance_Reports
+        cd ~/Compliance_Reports
         git commit -m "Update compliance reports"
         git push
 
